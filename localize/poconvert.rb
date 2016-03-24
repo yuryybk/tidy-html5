@@ -362,8 +362,8 @@ module PoConvertModule
         l_key = key.to_sym
         self.items[l_key] = {} unless items.has_key?(l_key)
         self.items[l_key][num_case] = {}
-        self.items[l_key][num_case][:comment] = comment
-        self.items[l_key][num_case][:fuzzy] = ( comment =~ /\(fuzzy\)/i ) != nil
+        self.items[l_key][num_case][:comment] = comment ? comment.sub( /\(fuzzy\) /i, '') : nil
+        self.items[l_key][num_case][:fuzzy] = ( comment =~ /\(fuzzy\) /i ) != nil
         self.items[l_key][num_case][:case] = num_case
         self.items[l_key][num_case][:if_group] = nil
         # Reconstitute Hex Escapes
@@ -658,7 +658,7 @@ msgstr ""
 "#{header_pot_line}\\n"
 "Last-Translator: #{ENV['USER']}#{ENV['USERNAME']}\\n"
 "Language-Team: \\n"
-"BAD"
+
       HEREDOC
 
       untranslated_items.delete(:TIDY_LANGUAGE)
@@ -670,7 +670,7 @@ msgstr ""
         end
 
         attribs = []
-        attribs << 'fuzzy' if value['0'][:fuzzy]
+        attribs << 'fuzzy' if value['0'][:fuzzy] && action == :msgunfmt
         attribs << 'c-format' if %w(%u %s %d).any? { | find | value['0'][:string].include?(find) }
         if attribs.count > 0
           report << "#, #{attribs.join(', ')}\n"
