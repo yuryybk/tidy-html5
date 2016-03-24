@@ -14,6 +14,7 @@ require 'erb'            # Needed for templating.
 require 'thor'           # thor provides robust command line parameter parsing.
 require 'i18n'           # Cross-platform access to `locale`.
 require 'digest'         # For computing checksums.
+require 'git'            # For working with old versions of files.
 
 
 ################################################################################
@@ -573,7 +574,7 @@ module PoConvertModule
     #  Perform the conversion for xgettext, msginit, and
     #  msgunfmt.
     #########################################################
-    def convert_to_po( source_file_h = nil, base_file = nil )
+    def convert_to_po( source_file_h = nil, base_file = nil, fuzzy_list = nil )
       return false unless english_header?
 
       # What we actually do depends on what was setup for us.
@@ -605,6 +606,20 @@ module PoConvertModule
         return false unless lang_source.source_file
       else
         lang_source = nil
+      end
+
+
+      # If we were given a fuzzy_list and we have a source_file, then
+      # we have to mark appropriate items as fuzzy.
+      if fuzzy_list && fuzzy_list.count > 0 && lang_source
+        lang_source.items.each do |key, value|
+          if fuzzy_list.include?(key)
+            value.each_value do |v|
+              v[:fuzzy] = true
+            end
+          end
+
+        end
       end
 
       # The information in the PO header can come from a few different sources
@@ -782,6 +797,8 @@ msgstr ""
       # Additionally we will only use comments from language_en.h. Besides
       #  preventing us from having to format them, we ensure that only the
       #  canonical comments are put into the H file in the event of changes.
+      # Additionally only include comments if enabled.
+      # Finally add fuzzy notes to comments if the PO item is fuzzy.
       po_content.items.each do |key, value|
         value.each_value do |item_entry|
           item_entry[:if_group] = lang_en.items[key]['0'][:if_group]
@@ -1124,6 +1141,110 @@ Complete Help:
         puts 'msgfmt exited without errors.'
       else
         puts "msgfmt exited with errors #{error_count} time(s). Consider using the --verbose or --debug options."
+        exit 1
+      end
+    end # msgfmt
+
+
+    #########################################################
+    # rebase
+    #  See long_desc
+    #########################################################
+    option :sha,
+           :type =>:string,
+           :desc => 'Specify the hash against which to check for changed strings.',
+           :aliases => '-c'
+    desc 'rebase [--sha=HASH]', 'Creates fresh POT, POs, and headers after updates to language_en.h.'
+    long_desc <<-LONG_DESC
+      After changing strings in language_en.h, this command will generate a fresh POT
+      template, as well as regenerate POs for each language in src/. Finally, it will
+      regenerate the language header files for each of the new PO files. Items that
+      have changed in English will be appropriately marked as fuzzy in the PO files.
+
+      Source files will *not* be overwritten. All generated files will be placed into
+      the working directory. Please review them before committing them to source.
+
+      If you specify the SHA-1 checksum of the commit for comparison purposes, then
+      this command identifies fuzzy items by comparing language_en.h with a previous
+      version as identified by the SHA-1.
+
+      Use case: If you change language_en.h, this handy command updates everything
+      else nearly automatically.
+    LONG_DESC
+    def rebase()
+      error_count = 0
+      fuzzy_list = nil
+
+      if options[:sha]
+        pwd = File.expand_path( File.join(Dir.getwd, '..') )
+        sha = options[:sha]
+        temp_file = "~#{sha}.h"
+        project = Git.open(pwd)
+
+        # We'll get the old version of the file from the specified commit,
+        # and then write it to a temporary file. Then we can parse both
+        # this temporary file as well as the current version of the file
+        # and detect the differences.
+        File.open( temp_file, 'w') { |f| f.write( project.show(sha, File.join('src', 'language_en.h')) ) }
+        header_old = PoHeaderFile.new(temp_file)
+        header_new = PoHeaderFile.new(@@default_en)
+        File.delete( temp_file )
+
+
+        # Compare each item in the current version with the value, if any,
+        # in the previous version in order to build a list of fuzzy stuff.
+        fuzzy_list = []
+        header_new.items.each do |key, value|
+          value.each do |plural_key, plural_value|
+            new_value = plural_value[:string]
+            old_value = header_old.items.include?(key) ? header_old.items[key][plural_key][:string] : nil
+            unless old_value == new_value
+              fuzzy_list << key
+            end
+
+          end
+        end
+        fuzzy_list.uniq!
+      end
+
+
+      # We're ready to generate the POT, which requires nothing special.
+      converter = PoConverter.new
+      unless converter.convert_to_po( nil, nil)
+        error_count += 1
+        puts 'There was an issue generating the POT. Will continue anyway.'
+      end
+
+
+      # Build a list of header files. Keep this list instead of counting
+      # on reading the working directory later.
+      header_path = File.join(pwd, 'src', 'language_*.h')
+      header_list = nil
+      Dir.chdir(File.join(pwd, 'src')) do
+        header_list = Dir.glob('language_*.h')
+      end
+      header_list.delete('language_en.h')
+
+
+      # Building the POs is straight forward.
+      header_list.each do |input_file|
+        filename = File.join(pwd, 'src', input_file)
+        converter = PoConverter.new
+        error_count = converter.convert_to_po( filename, nil, fuzzy_list ) ? error_count : error_count + 1
+      end
+
+
+      # Building the Headers is straight forward, too.
+      header_list.each do |input_file|
+        filename = "#{File.basename(input_file, '.*')}.po"
+        converter = PoConverter.new
+        error_count = converter.convert_to_h( filename, nil ) ? error_count : error_count + 1
+      end
+
+      if error_count == 0
+        puts 'rebase exited without errors.'
+      else
+        puts "rebase exited with errors #{error_count} time(s). Consider using the --verbose or --debug options."
         exit 1
       end
     end # msgfmt
