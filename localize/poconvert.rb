@@ -570,7 +570,7 @@ module PoConvertModule
 
 
     #########################################################
-    # convert_to_po( source_file_h, base_file )
+    # convert_to_po( source_file_h, base_file, fuzzy_list )
     #  Perform the conversion for xgettext, msginit, and
     #  msgunfmt.
     #########################################################
@@ -585,14 +585,16 @@ module PoConvertModule
       action = :msginit if source_file_h.nil? && po_locale
       action = :xgettext if source_file_h.nil? && po_locale.nil?
 
-      # Untranslated Items form the basis of all output. For convenience
-      # we can use some non-English strings as an "untranslated" string,
-      # e.g., to help translate regional formats.
+      # lang_en serves as the master reference for all output, especially
+      # comments and metadata.
       lang_en = PoHeaderFile.new(@@default_en)
       return false unless lang_en.source_file
 
+      # untranslated_items serves as the source for *untranslated* strings.
+      # This differs from lang_en in that we may overwrite some of the
+      # lang_en strings from the base_file, later. This can help when
+      # translating, e.g., regional formats.
       untranslated_items = lang_en.items.clone
-
       if base_file
         lang_base = PoHeaderFile.new(base_file)
         return false unless lang_base.source_file
@@ -600,7 +602,7 @@ module PoConvertModule
       end
 
       # We will use lang_source if we have a source_file_h, i.e., msgunfmt,
-      # as the source for translated strings.
+      # as the source for *translated* strings.
       if source_file_h
         lang_source = PoHeaderFile.new(source_file_h)
         return false unless lang_source.source_file
