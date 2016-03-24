@@ -155,11 +155,7 @@ module PoConvertModule
 
     #########################################################
     # parse_po_section( content )
-    #  Parses a single PO section. Note that will will still
-    #  parse and accept ##BLAH## as #if groups; they just
-    #  won't be used. We'll get the information live from
-    #  the English header instead of trying to store meta-
-    #  data in the PO/POT.
+    #  Parses a single PO section.
     #########################################################
     def parse_po_section( content )
 
@@ -167,12 +163,12 @@ module PoConvertModule
       # if we want to capture more PO stuff in the future.
       map = [
           [ :START,    :COMMENT,   :SET_COMMENT,  :START    ],
-          [ :START,    :IFGROUP,   :SET_GROUP,    :START    ],
+          [ :START,    :FLAG,      :SET_FLAG,     :START    ],
           [ :START,    :NEW_ITEM,  :SET_INIT,     :CONTINUE ],
           [ :START,    :OTHER,     :NOOP,         :START    ],
           [ :START,    :EMPTY,     :NOOP,         :START    ],
           [ :CONTINUE, :COMMENT,   :ERROR,        nil       ],
-          [ :CONTINUE, :IFGROUP,   :ERROR,        nil       ],
+          [ :CONTINUE, :FLAG,      :ERROR,        nil       ],
           [ :CONTINUE, :NEW_ITEM,  :SET_FINAL,    :CONTINUE ],
           [ :CONTINUE, :EMPTY,     :SET_FINAL,    :START    ],
           [ :CONTINUE, :OTHER,     :ADD_TO,       :CONTINUE ],
@@ -180,7 +176,7 @@ module PoConvertModule
 
       current_label = nil
       current_comment = nil
-      current_if_group = nil
+      current_flag = nil
       current_cases = {}     # 'case' => string
       state = :START
       buffer = ''
@@ -193,7 +189,7 @@ module PoConvertModule
         input = :OTHER
         input = :EMPTY if line == "\n"
         input = :COMMENT if line.start_with?('#.')
-        input = :IFGROUP if line[/^#\..*##.*##/]
+        input = :FLAG if line.start_with?('#,')
         input = :NEW_ITEM if line.start_with?('msgctxt', 'msgid', 'msgstr')
 
         # Find our current state-input pair
@@ -222,8 +218,8 @@ module PoConvertModule
                 item = line[/^(.*?)\s/, 1]
               when :SET_COMMENT
                 current_comment = line.match(/#\.\s*(.*?)$/)[1]
-              when :SET_GROUP
-                current_if_group = line.match(/##(.*)##/)[1]
+              when :SET_FLAG
+                current_flag = line.match(/#\,\s*(.*?)$/)[1]
               when :ERROR
                 @@log.error "#{__method__}: Could NOT parse part of the PO file. Aborting!\n"
                 @@log.error "#{__method__}: Last known label was \"#{current_label}\".\n"
@@ -240,7 +236,7 @@ module PoConvertModule
 
       # We have some nice local vars but let's put these into a hash
       # just like PoHeader file uses:
-      # :keyword => { '#' => { :comment, :if_group, :case, :string } }
+      # :keyword => { '#' => { :comment, :fuzzy, :case, :string } }
       # We will also reject items that have no string value.
       result = {}
       if current_label
@@ -248,9 +244,11 @@ module PoConvertModule
         result[current_label] = {}
         current_cases.each do | key, value |
           unless value == ''
+            fuzzy = ( current_flag =~ /fuzzy/i ) != nil
             result[current_label][key] = {}
-            result[current_label][key][:comment] = current_comment
-            result[current_label][key][:if_group] = current_if_group
+            result[current_label][key][:comment] = fuzzy ? "(fuzzy) #{current_comment}" : current_comment
+            result[current_label][key][:fuzzy] = fuzzy
+            result[current_label][key][:if_group] = nil
             result[current_label][key][:case] = key
             result[current_label][key][:string] = value
           end
@@ -788,6 +786,7 @@ msgstr ""
         value.each_value do |item_entry|
           item_entry[:if_group] = lang_en.items[key]['0'][:if_group]
           item_entry[:comment] = force_comments ? lang_en.items[key]['0'][:comment] : nil
+          item_entry[:comment] = "(fuzzy) #{item_entry[:comment]}" if item_entry[:fuzzy]
         end
       end
 
