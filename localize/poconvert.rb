@@ -1177,8 +1177,9 @@ Complete Help:
       error_count = 0
       fuzzy_list = nil
 
+      pwd = File.expand_path(File.join(Dir.getwd, '..'))
+
       if options[:sha]
-        pwd = File.expand_path( File.join(Dir.getwd, '..') )
         sha = options[:sha]
         temp_file = "~#{sha}.h"
         project = Git.open(pwd)
