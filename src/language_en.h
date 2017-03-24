@@ -248,6 +248,25 @@ static languageDefinition language_en = { whichPluralForm_en, {
       - It's very important that <br/> be self-closing!
       - The strings "Tidy" and "HTML Tidy" are the program name and must not
       be translated. */
+        TidyConsoleWidth,             0,
+        "This option specifies the maximum width of messages that Tidy outputs, "
+        "that is, the point that Tidy starts to word wrap messages. "
+        "<br />"
+        "In no value is specified, then in general the default of 80 characters "
+        "will be used. However, when running in an interactive shell the Tidy "
+        "console application will attempt to determine your console size. If you "
+        "prefer a fixed size despite the console size, then set this option. "
+        "<br />"
+        "Specifying <var>0</var> will disable Tidy's word wrapping entirely. "
+    },
+    {/* Important notes for translators:
+      - Use only <code></code>, <var></var>, <em></em>, <strong></strong>, and
+      <br/>.
+      - Entities, tags, attributes, etc., should be enclosed in <code></code>.
+      - Option values should be enclosed in <var></var>.
+      - It's very important that <br/> be self-closing!
+      - The strings "Tidy" and "HTML Tidy" are the program name and must not
+      be translated. */
         TidyCSSPrefix,                0,
         "This option specifies the prefix that Tidy uses for styles rules. "
         "<br/>"
