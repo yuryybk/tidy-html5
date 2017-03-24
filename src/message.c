@@ -177,9 +177,11 @@ static void messageOut( TidyMessageImpl *message )
     if ( go )
     {
         TidyOutputSink *outp = &doc->errout->sink;
+        uint columns = message->level > TidyFatal ? cfg( doc, TidyConsoleWidth ) : 0;
+        tmbstr wrapped = TY_(tidyWrappedText)( doc, message->messageOutput, columns );
         ctmbstr cp;
         byte b = '\0';
-        for ( cp = message->messageOutput; *cp; ++cp )
+        for ( cp = wrapped; *cp; ++cp )
         {
             b = (*cp & 0xff);
             if (b == (byte)'\n')
@@ -187,11 +189,12 @@ static void messageOut( TidyMessageImpl *message )
             else
                 outp->putByte( outp->sinkData, b ); /* #383 - no encoding */
         }
-
+        TidyDocFree( doc, wrapped );
+        
         /* Always add a trailing newline. Reports require this, and dialogue
            messages will be better spaced out without having to fill the
            language file with superflous newlines. */
-        TY_(WriteChar)( '\n', doc->errout );
+        /* TY_(WriteChar)( '\n', doc->errout ); */
     }
 
     TY_(tidyMessageRelease)(message);
@@ -1176,15 +1179,20 @@ static uint* makeBreakList( TidyDocImpl* doc, wordList words, uint count, uint c
  */
 tmbstr TY_(tidyWrappedText)( TidyDocImpl* doc, ctmbstr string, uint columns )
 {
-    uint len;
-    wordList list = makeWordList( doc,string, &len );
-    uint *breaks = makeBreakList( doc, list, len, columns );
-    uint sizeBuf = (uint)strlen(list[0].s) + sizeof(breaks) * len + 1;
-
     uint i = 0;
     uint j = 0;
     uint nl = 0;
     uint nnl = 0;
+
+    uint len;
+    wordList list;
+    uint *breaks;
+    uint sizeBuf;
+
+    columns = columns > 0 ? columns : UINT_MAX;
+    list = makeWordList( doc,string, &len );
+    breaks = makeBreakList( doc, list, len, columns );
+    sizeBuf = (uint)strlen(list[0].s) + sizeof(breaks) * len + 1;
 
     char *output = TidyDocAlloc( doc, sizeBuf );
     output[0] = '\0';
