@@ -29,6 +29,7 @@
 #endif
 #if defined(_WIN32)
 #include <windows.h>    /* Force console to UTF8. */
+#include "io.h"         /* _isatty */
 #endif
 #if !defined(NDEBUG) && defined(_MSC_VER)
 #include "sprtf.h"
@@ -79,7 +80,7 @@ static Bool samefile(ctmbstr filename1, /**< First filename */
 
 /** Handles exit cleanup.
  */
-static void tidy_cleanup()
+static void tidy_cleanup( void )
 {
 #if defined(_WIN32)
     /* Restore original Windows code page. */
