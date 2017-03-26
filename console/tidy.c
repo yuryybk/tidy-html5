@@ -21,12 +21,14 @@
 
 #include "tidy.h"
 #include "tidybuffio.h"
-#include "locale.h"
-#include "limits.h"
-#include <sys/ioctl.h>
-#include "unistd.h"
+#include "locale.h"     /* for determing and setting locale */
+#include "limits.h"     /* UINT_MAX, etc. */
+#if !defined(_WIN32)
+#include <sys/ioctl.h>  /* Console size sniffing */
+#include "unistd.h"     /* isatty */
+#endif
 #if defined(_WIN32)
-#include <windows.h> /* Force console to UTF8. */
+#include <windows.h>    /* Force console to UTF8. */
 #endif
 #if !defined(NDEBUG) && defined(_MSC_VER)
 #include "sprtf.h"
@@ -126,9 +128,12 @@ static tmbstr stringWithFormat(const ctmbstr fmt, /**< The format string. */
  */
 static Bool outputToConsole( void )
 {
-    return isatty(fileno(stdout)) /* No console redirection */
-        && isatty(fileno(stderr))        /* No console redirection */
-        && isatty(fileno(errout));       /* No use of the -file option */
+#if defined(_WIN32)
+#define isatty _isatty
+#endif
+    return isatty(fileno(stdout))   /* No console redirection */
+        && isatty(fileno(stderr))   /* No console redirection */
+        && isatty(fileno(errout));  /* No use of the -file option */
 }
 
 
@@ -137,10 +142,16 @@ static Bool outputToConsole( void )
  */
 static uint getConsoleWidth( void )
 {
+#if !defined(_WIN32)
     struct winsize size;
     ioctl(fileno(stdout), TIOCGWINSZ, &size);
 
     return size.ws_col;
+#else
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    return csbi.srWindow.Right - csbi.srWindow.Left + 1;
+#endif
 }
 
 
