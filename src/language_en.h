@@ -251,12 +251,12 @@ static languageDefinition language_en = { whichPluralForm_en, {
         TidyConsoleWidth,             0,
         "This option specifies the maximum width of messages that Tidy outputs, "
         "that is, the point that Tidy starts to word wrap messages. "
-        "<br />"
+        "<br/>"
         "In no value is specified, then in general the default of 80 characters "
         "will be used. However, when running in an interactive shell the Tidy "
         "console application will attempt to determine your console size. If you "
         "prefer a fixed size despite the console size, then set this option. "
-        "<br />"
+        "<br/>"
         "Specifying <var>0</var> will disable Tidy's word wrapping entirely. "
     },
     {/* Important notes for translators:
@@ -2299,7 +2299,6 @@ static languageDefinition language_en = { whichPluralForm_en, {
         "\n"
         "Validate your HTML documents using the W3C Nu Markup Validator:\n"
         "  http://validator.w3.org/nu/\n"
-        "\n"
     },
     {/* Languages that do not wrap at blank spaces should limit this console
         output to 78 characters per line according to language rules.
@@ -2342,7 +2341,6 @@ static languageDefinition language_en = { whichPluralForm_en, {
         "\n"
         "The rightmost column indicates how Tidy will understand the "
         "legacy Windows name.\n"
-        "\n"
     },
     {/* Languages that do not wrap at blank spaces should limit this console
         output to 78 characters per line according to language rules.
@@ -2351,11 +2349,10 @@ static languageDefinition language_en = { whichPluralForm_en, {
         "\n"
         "The following languages are currently installed in Tidy. Please "
         "note that there's no guarantee that they are complete; only that "
-        "one developer or another started to add the language indicated. \n"
+        "one developer or another started to add the language indicated.\n"
         "\n"
         "Incomplete localizations will default to \"en\" when necessary. "
-        "Please report instances of incorrect strings to the Tidy team. \n"
-        "\n"
+        "Please report instances of incorrect strings to the Tidy team.\n"
     },
     {/* Languages that do not wrap at blank spaces should limit this console
         output to 78 characters per line according to language rules.
@@ -2366,10 +2363,9 @@ static languageDefinition language_en = { whichPluralForm_en, {
         "If Tidy is able to determine your locale then Tidy will use the "
         "locale's language automatically. For example Unix-like systems use a "
         "$LANG and/or $LC_ALL environment variable. Consult your operating "
-        "system documentation for more information. \n"
+        "system documentation for more information.\n"
         "\n"
-        "Tidy is currently using locale %s. \n"
-        "\n"
+        "Tidy is currently using locale %s.\n"
     },
 #endif /* SUPPORT_CONSOLE_APP */
     
