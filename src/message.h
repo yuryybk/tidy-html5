@@ -132,6 +132,7 @@ uint TY_(getNextErrorCode)( TidyIterator* iter );
 
 /** Performs word wrapping on `string` limiting output to `column`, returning
  ** an allocated string.
+ ** @param doc A TidyDocImpl instance.
  ** @param string The text to wrap.
  ** @param columns The maximum column count to output.
  ** @result An allocated, word-wrapped string.

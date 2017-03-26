@@ -43,9 +43,15 @@ static uint win_cp; /* original Windows code page */
 #endif
 
 
+/** @defgroup console_application Tidy Console Application
+ ** @copydoc tidy.c
+ ** @{
+ */
+
+
 /* MARK: - Miscellaneous Utilities */
 /***************************************************************************//**
- ** @defgroup utilities_misc Miscellaneous Utilities.
+ ** @defgroup utilities_misc Miscellaneous Utilities
  ** This group contains general utilities used in the console application.
  *******************************************************************************
  ** @{
@@ -116,7 +122,7 @@ static tmbstr stringWithFormat(const ctmbstr fmt, /**< The format string. */
 /** @} end utilities_misc group */
 /* MARK: - Output Helping Functions */
 /***************************************************************************//**
- ** @defgroup utilities_output Output Helping Functions.
+ ** @defgroup utilities_output Output Helping Functions
  ** This group functions that aid the formatting of output.
  *******************************************************************************
  ** @{
@@ -281,7 +287,7 @@ static void unknownOption(TidyDoc tdoc, /**< The Tidy document. */
 /** @} end utilities_output group */
 /* MARK: - CLI Options Utilities */
 /***************************************************************************//**
- ** @defgroup options_cli CLI Options Utilities.
+ ** @defgroup options_cli CLI Options Utilities
  ** These structures, arrays, declarations, and definitions are used throughout
  ** this console application.
  *******************************************************************************
@@ -399,7 +405,7 @@ static const CmdOptDesc cmdopt_defs[] =  {
 
 
 /** Option names aren't localized, but the sample fields should be localized.
- ** For example, <file> should be <archivo> in Spanish.
+ ** For example, `<file>` should be `<archivo>` in Spanish.
  ** @param pos A CmdOptDesc array with fields that must be localized.
  */
 static void localize_option_names( CmdOptDesc *pos)
@@ -1495,7 +1501,7 @@ static void printXMLDescription(TidyDoc tdoc,   /**< The Tidy document. */
     }
 }
 
-/** Prints for XML an option's <seealso>.
+/** Prints for XML an option's `<seealso>`.
  */
 static void printXMLCrossRef(TidyDoc tdoc,   /**< The Tidy document. */
                              TidyOption topt /**< The option. */
@@ -1511,7 +1517,7 @@ static void printXMLCrossRef(TidyDoc tdoc,   /**< The Tidy document. */
 }
 
 
-/** Prints for XML an option's <eqconfig>.
+/** Prints for XML an option's `<eqconfig>`.
  */
 static void printXMLCrossRefEqConsole(TidyDoc tdoc,   /**< The Tidy document. */
                                       TidyOption topt /**< The option. */
@@ -2400,6 +2406,7 @@ int main( int argc, char** argv )
 
 
 /** @} end main group */
+/** @} end console_application group */
 
 
 /*
