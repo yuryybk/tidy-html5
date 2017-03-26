@@ -23,6 +23,8 @@
 #include "tidybuffio.h"
 #include "locale.h"
 #include "limits.h"
+#include <sys/ioctl.h>
+#include "unistd.h"
 #if defined(_WIN32)
 #include <windows.h> /* Force console to UTF8. */
 #endif
@@ -116,6 +118,29 @@ static tmbstr stringWithFormat(const ctmbstr fmt, /**< The format string. */
     va_end(argList);
 
     return result;
+}
+
+
+/** Determine whether or not all output is going to an interactive console.
+ ** @result Returns a Bool indicating that all output is going to a console.
+ */
+static Bool outputToConsole( void )
+{
+    return isatty(fileno(stdout)) /* No console redirection */
+        && isatty(fileno(stderr))        /* No console redirection */
+        && isatty(fileno(errout));       /* No use of the -file option */
+}
+
+
+/** Determine the width of the console.
+ ** @result Returns the width of the console.
+ */
+static uint getConsoleWidth( void )
+{
+    struct winsize size;
+    ioctl(fileno(stdout), TIOCGWINSZ, &size);
+
+    return size.ws_col;
 }
 
 
@@ -998,11 +1023,14 @@ static void printOption(TidyDoc ARG_UNUSED(tdoc), /**< The Tidy document. */
 }
 
 /** Handles the -help-config service.
+ ** @remark We will not support console word wrapping for the configuration
+ **         options table. If users really have a small console, then they
+ *          should make it wider or output to a file.
  ** @param tdoc The Tidy document.
  */
 static void optionhelp( TidyDoc tdoc )
 {
-    printf( "%s", tidyLocalizedString( TC_TXT_HELP_CONFIG ) );
+    printf_wrapped( tdoc, "%s", tidyLocalizedString( TC_TXT_HELP_CONFIG ) );
 
     printf( fmt,
            tidyLocalizedString( TC_TXT_HELP_CONFIG_NAME ),
@@ -1369,6 +1397,9 @@ void tidyPrintTidyLanguageNames( ctmbstr format )
 
 
 /** Handles the -lang help service.
+ ** @remark We will not support console word wrapping for the tables. If users
+ **         really have a small console, then they should make it wider or 
+ **         output to a file.
  ** @param tdoc The Tidy document.
  */
 static void lang_help( TidyDoc tdoc )
@@ -1436,11 +1467,14 @@ static void printOptionValues(TidyDoc ARG_UNUSED(tdoc),  /**< The Tidy document.
 }
 
 /** Handles the -show-config service.
+ ** @remark We will not support console word wrapping for the table. If users
+ **         really have a small console, then they should make it wider or
+ **         output to a file.
  ** @param tdoc The Tidy Document.
  */
 static void optionvalues( TidyDoc tdoc )
 {
-    printf( "\n%s\n\n", tidyLocalizedString(TC_STRING_CONF_HEADER) );
+    printf_wrapped( tdoc, "\n%s\n", tidyLocalizedString(TC_STRING_CONF_HEADER) );
     printf( fmt, tidyLocalizedString(TC_STRING_CONF_NAME),
            tidyLocalizedString(TC_STRING_CONF_TYPE),
            tidyLocalizedString(TC_STRING_CONF_VALUE) );
@@ -1894,7 +1928,8 @@ int main( int argc, char** argv )
     TidyDoc tdoc = tidyCreate();
     int status = 0;
     tmbstr locale = NULL;
-    tidySetMessageCallback( tdoc, reportCallback);
+    uint iac_width = 0;
+    tidySetMessageCallback( tdoc, reportCallback); /* experimental group */
 
     uint contentErrors = 0;
     uint contentWarnings = 0;
@@ -1904,8 +1939,10 @@ int main( int argc, char** argv )
 
     /* Set an atexit handler. */
     atexit( tidy_cleanup );
-    
+
+    /*************************************/
     /* Set the locale for tidy's output. */
+    /*************************************/
     locale = tidySystemLocale(locale);
     tidySetLanguage(locale);
     if ( locale )
@@ -1920,6 +1957,17 @@ int main( int argc, char** argv )
     win_cp = GetConsoleOutputCP();
     SetConsoleOutputCP(CP_UTF8);
 #endif
+
+    /* Handle the default console width.
+     * Only set this is all output is going to an interactive console; if any
+     * output is going to a file, then do NOT override the default. If the user
+     * uses console-width, it will override this setting and apply to files.
+     */
+    if ( outputToConsole() )
+    {
+        iac_width = getConsoleWidth();
+        tidyOptSetInt( tdoc, TidyConsoleWidth, iac_width);
+    }
 
 #if !defined(NDEBUG) && defined(_MSC_VER)
     set_log_file((char *)"temptidy.txt", 0);
@@ -2300,6 +2348,18 @@ int main( int argc, char** argv )
             --argc;
             ++argv;
             continue;
+        }
+
+        /* Verify that all output is still going to an interactive console. If
+         * NOT, and the user hasn't set her own value, then undo our setting.
+         */
+        if ( !outputToConsole() )
+        {
+            if ( tidyOptGetInt( tdoc, TidyConsoleWidth ) == iac_width )
+            {
+                TidyOption topt = tidyGetOption(tdoc, TidyConsoleWidth);
+                tidyOptSetInt( tdoc, TidyConsoleWidth, tidyOptGetDefaultInt( topt ) );
+            }
         }
 
         if ( argc > 1 )

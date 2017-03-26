@@ -257,6 +257,9 @@ static languageDefinition language_en = { whichPluralForm_en, {
         "console application will attempt to determine your console size. If you "
         "prefer a fixed size despite the console size, then set this option. "
         "<br/>"
+        "Note that when using the <code>file</code> option or piping any output "
+        "to a file, then the width of the interactive shell will be ignored."
+        "<br/>"
         "Specifying <var>0</var> will disable Tidy's word wrapping entirely. "
     },
     {/* Important notes for translators:
