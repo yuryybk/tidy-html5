@@ -384,7 +384,7 @@ TidyMessageArgument TY_(getNextMessageArgument)( TidyMessageImpl message, TidyIt
 
 TidyFormatParameterType TY_(getArgType)( TidyMessageImpl message, TidyMessageArgument* arg )
 {
-    int argNum = (int)*arg;
+    size_t argNum = (int)*arg;
     assert( argNum <= message.argcount );
     
     return message.arguments[argNum].type;
