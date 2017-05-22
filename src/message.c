@@ -199,60 +199,104 @@ static void messageOut( TidyMessageImpl *message )
 
 
 /*********************************************************************
+ * Message Dispatching
+ * We provide a single, flexible method for emitting reports, but
+ * several different formatters for specific reports.
+ *********************************************************************/
+
+
+/* Functions of this type will create new instances of TidyMessage specific to
+** the type of report being emitted. Many messages share the same fomatter for
+** messages, but new ones can be written as required.
+*/
+typedef TidyMessageImpl*(messageFormatter)(TidyDocImpl* doc, Node *element, Node *node, uint code, uint level, va_list args);
+
+
+/* Forward declarations of messageFormatter functions. */
+static messageFormatter formatCustomTagDetected;
+
+
+/* This structure ties together for each report code the TidyReportLevel and the
+** formatter to be used to construct the message. Assuming an existing formatter can
+** be used, it makes it simple to output new messages (or change report level) by
+** modifying this array.
+*/
+struct _dispatchTable {
+    uint code;                 /**< The message code. */
+    TidyReportLevel level;     /**< The TidyReportLevel of the message. */
+    messageFormatter *handler; /**< Function that handles the message. */
+} dispatchTable[] = {
+    { CUSTOM_TAG_DETECTED, TidyInfo, formatCustomTagDetected },
+    { 0, 0, NULL }
+};
+
+
+/* This single Report output routine uses the correct formatter with all
+** possible, relevant data that can be reported. The only real drawbacks are
+** having to pass NULL when some of the values aren't used, and the lack of
+** type safety by using the VA_LIST.
+*/
+void TY_(Report)(TidyDocImpl* doc, Node *element, Node *node, uint code, ...)
+{
+    int i = 0;
+    while ( dispatchTable[i].code != 0 )
+    {
+        if ( dispatchTable[i].code == code )
+        {
+            messageFormatter *handler = dispatchTable[i].handler;
+            TidyReportLevel level = dispatchTable[i].level;
+            TidyMessageImpl *message = handler( doc, element, node, code, level, NULL );
+            messageOut( message );
+            break;
+        }
+        i++;
+    }
+    
+}
+
+
+/*********************************************************************
+ * Message Formatting
+ * These individual message formatters populate messages with the
+ * correct, pertinent data.
+ *********************************************************************/
+
+
+TidyMessageImpl *formatCustomTagDetected(TidyDocImpl* doc, Node *element, Node *node, uint code, uint level, va_list args)
+{
+    char elemdesc[256] = { 0 };
+    ctmbstr tagtype;
+
+    TagToString(element, elemdesc, sizeof(elemdesc));
+    
+    switch ( cfg( doc, TidyUseCustomTags ) )
+    {
+        case TidyCustomBlocklevel:
+            tagtype = tidyLocalizedString( TIDYCUSTOMBLOCKLEVEL_STRING );
+            break;
+        case TidyCustomEmpty:
+            tagtype = tidyLocalizedString( TIDYCUSTOMEMPTY_STRING );
+            break;
+        case TidyCustomInline:
+            tagtype = tidyLocalizedString( TIDYCUSTOMINLINE_STRING );
+            break;
+        case TidyCustomPre:
+        default:
+            tagtype = tidyLocalizedString( TIDYCUSTOMPRE_STRING );
+            break;
+    }
+    
+    return TY_(tidyMessageCreateWithNode)(doc, element, code, TidyInfo, elemdesc, tagtype );
+}
+
+
+
+/*********************************************************************
  * High Level Message Writing Functions - General
  * When adding new reports to LibTidy, preference should be given
  * to one of these existing, general purpose message writing
  * functions, if at all possible.
  *********************************************************************/
-
-
-void TY_(ReportNotice)(TidyDocImpl* doc, Node *element, Node *node, uint code)
-{
-    TidyMessageImpl *message = NULL;
-    Node* rpt = ( element ? element : node );
-    char nodedesc[256] = { 0 };
-    char elemdesc[256] = { 0 };
-    ctmbstr tagtype;
-    
-    TagToString(node, nodedesc, sizeof(nodedesc));
-
-    switch (code)
-    {
-        case TRIM_EMPTY_ELEMENT:
-            TagToString(element, elemdesc, sizeof(nodedesc));
-            message = TY_(tidyMessageCreateWithNode)(doc, element, code, TidyWarning, elemdesc );
-            break;
-
-        case REPLACING_ELEMENT:
-            TagToString(element, elemdesc, sizeof(elemdesc));
-            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning, elemdesc, nodedesc );
-            break;
-
-        case CUSTOM_TAG_DETECTED:
-            TagToString(element, elemdesc, sizeof(elemdesc));
-            
-            switch ( cfg( doc, TidyUseCustomTags ) )
-            {
-                case TidyCustomBlocklevel:
-                    tagtype = tidyLocalizedString( TIDYCUSTOMBLOCKLEVEL_STRING );
-                    break;
-                case TidyCustomEmpty:
-                    tagtype = tidyLocalizedString( TIDYCUSTOMEMPTY_STRING );
-                    break;
-                case TidyCustomInline:
-                    tagtype = tidyLocalizedString( TIDYCUSTOMINLINE_STRING );
-                    break;
-                case TidyCustomPre:
-                default:
-                    tagtype = tidyLocalizedString( TIDYCUSTOMPRE_STRING );
-                    break;
-            }
-            message = TY_(tidyMessageCreateWithNode)(doc, element, code, TidyInfo, elemdesc, tagtype );
-            break;
-    }
-
-    messageOut( message );
-}
 
 
 void TY_(ReportWarning)(TidyDocImpl* doc, Node *element, Node *node, uint code)
@@ -266,13 +310,19 @@ void TY_(ReportWarning)(TidyDocImpl* doc, Node *element, Node *node, uint code)
 
     switch (code)
     {
-        case NESTED_QUOTATION:
-            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning );
+        case TRIM_EMPTY_ELEMENT:
+            TagToString(element, elemdesc, sizeof(nodedesc));
+            message = TY_(tidyMessageCreateWithNode)(doc, element, code, TidyWarning, elemdesc );
             break;
-
+            
+        case REPLACING_ELEMENT:
         case OBSOLETE_ELEMENT:
             TagToString(element, elemdesc, sizeof(elemdesc));
             message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning, elemdesc, nodedesc );
+            break;
+
+        case NESTED_QUOTATION:
+            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning );
             break;
 
         case NESTED_EMPHASIS:
@@ -413,7 +463,7 @@ void TY_(ReportError)(TidyDocImpl* doc, Node *element, Node *node, uint code)
     messageOut( message );
 
     /* Although the callback is always executed for message2, it's only
-       added to the output sink TidyShowWarnings is enabled. */
+       added to the output sink if TidyShowWarnings is enabled. */
     if (cfgBool( doc, TidyShowWarnings ))
         messageOut( message2 );
 }

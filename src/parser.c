@@ -90,7 +90,7 @@ void TY_(CoerceNode)(TidyDocImpl* doc, Node *node, TidyTagId tid, Bool obsolete,
     else if (unexpected)
         TY_(ReportError)(doc, node, tmp, REPLACING_UNEX_ELEMENT);
     else
-        TY_(ReportNotice)(doc, node, tmp, REPLACING_ELEMENT);
+        TY_(ReportWarning)(doc, node, tmp, REPLACING_ELEMENT);
 
     TidyDocFree(doc, tmp->element);
     TidyDocFree(doc, tmp);
@@ -337,7 +337,7 @@ Node *TY_(TrimEmptyElement)( TidyDocImpl* doc, Node *element )
     if ( CanPrune(doc, element) )
     {
        if (element->type != TextNode)
-            TY_(ReportNotice)(doc, element, NULL, TRIM_EMPTY_ELEMENT);
+            TY_(ReportWarning)(doc, element, NULL, TRIM_EMPTY_ELEMENT);
 
         return TY_(DiscardElement)(doc, element);
     }
