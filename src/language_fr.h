@@ -832,7 +832,6 @@ static languageDefinition language_fr = { whichPluralForm_fr, {
     { DTYPE_NOT_UPPER_CASE,                          0, "SYSTEM, PUBLIC, W3C, DTD, EN doivent être en majuscules"                                                },
     { ELEMENT_VERS_MISMATCH_ERROR,                   0, "%s élément non disponible dans %s"                                                                      },
     { ELEMENT_VERS_MISMATCH_WARN,                    0, "%s élément non disponible dans %s"                                                                      },
-    { ENCODING_IO_CONFLICT,                          0, "Encodage de sortie non fonctionnel avec la sortie standard"                                             },
     { ILLEGAL_NESTING,                               0, "%s ne doit pas être imbriqué"                                                                           },
     { INCONSISTENT_NAMESPACE,                        0, "l'espace de nom HTML ne correspond pas au contenu"                                                      },
     { INCONSISTENT_VERSION,                          0, "La déclaration DOCTYPE HTML ne correspond pas au contenu"                                               },
@@ -853,7 +852,6 @@ static languageDefinition language_fr = { whichPluralForm_fr, {
     { TAG_NOT_ALLOWED_IN,                            0, "%s n'est pas permis dans les éléments <%s>"                                                             },
     { TOO_MANY_ELEMENTS_IN,                          0, "trop d'éléments %s dans <%s>"                                                                           },
     { TOO_MANY_ELEMENTS,                             0, "trop d'éléments %s"                                                                                     },
-    { UNESCAPED_ELEMENT,                             0, "%s non échappé dans le contenu pre"                                                                     },
     { USING_BR_INPLACE_OF,                           0, "utilisation de <br> à la place de %s"                                                                   },
     { DUPLICATE_FRAMESET,                            0, "élément répété FRAMESET"                                                                                },
     { SUSPECTED_MISSING_QUOTE,                       0, "absence de guillemet pour la valeur d'attribut"                                                         },
@@ -874,7 +872,6 @@ static languageDefinition language_fr = { whichPluralForm_fr, {
         "+FFFD."
     },
     { BAD_SUMMARY_HTML5,                             0, "L'attribut summary sur l'élément %s est obsolète avec HTML5"                                            },
-    { COERCE_TO_ENDTAG_WARN,                         0, "<%s> est probablement destiné à </%s>"                                                                  },
     { NESTED_EMPHASIS,                               0, "accentuation imbriquée %s"                                                                              },
     { NESTED_QUOTATION,                              0, "éléments \"q\" imbriqués, erreur typographique possible"                                                },
     { OBSOLETE_ELEMENT,                              0, "remplacement de l'élément obsolète %s par %s"                                                           },
@@ -884,6 +881,7 @@ static languageDefinition language_fr = { whichPluralForm_fr, {
     { ELEMENT_NOT_EMPTY,                             0, "%s élément non vide ou non fermé"                                                                       },
     { UNEXPECTED_END_OF_FILE,                        0, "fin de fichier inattendue %s"                                                                           },
     { UNEXPECTED_ENDTAG,                             0, "</%s> inattendu"                                                                                        },
+    { UNEXPECTED_ENDTAG_XML,                         0, "</%s> inattendu"                                                                                        },
 
 #if SUPPORT_ACCESSIBILITY_CHECKS
     { IMG_MISSING_ALT,                               0, "[1.1.1.1]: <img> texte manquant 'alt'."                                                                 },

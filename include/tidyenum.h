@@ -219,7 +219,6 @@ extern "C" {
     FN(DTYPE_NOT_UPPER_CASE)          \
     FN(ELEMENT_VERS_MISMATCH_ERROR)   \
     FN(ELEMENT_VERS_MISMATCH_WARN)    \
-    FN(ENCODING_IO_CONFLICT)          \
     FN(ILLEGAL_NESTING)               \
     FN(INCONSISTENT_NAMESPACE)        \
     FN(INCONSISTENT_VERSION)          \
@@ -240,7 +239,6 @@ extern "C" {
     FN(TAG_NOT_ALLOWED_IN)            \
     FN(TOO_MANY_ELEMENTS_IN)          \
     FN(TOO_MANY_ELEMENTS)             \
-    FN(UNESCAPED_ELEMENT)             \
     FN(USING_BR_INPLACE_OF)           \
     /* ReportFatal */                 \
     FN(DUPLICATE_FRAMESET)            \
@@ -260,7 +258,6 @@ extern "C" {
     FN(BAD_SURROGATE_TAIL)            \
     /* ReportWarning */               \
     FN(BAD_SUMMARY_HTML5)             \
-    FN(COERCE_TO_ENDTAG_WARN)         \
     FN(NESTED_EMPHASIS)               \
     FN(NESTED_QUOTATION)              \
     FN(OBSOLETE_ELEMENT)              \
@@ -270,8 +267,9 @@ extern "C" {
     FN(COERCE_TO_ENDTAG)              \
     FN(ELEMENT_NOT_EMPTY)             \
     FN(UNEXPECTED_END_OF_FILE)        \
-    FN(UNEXPECTED_ENDTAG)
-    
+    FN(UNEXPECTED_ENDTAG)             \
+    FN(UNEXPECTED_ENDTAG_XML)         \
+
 
 /** These are report messages added by Tidy's accessibility module. */
 #define FOREACH_ACCESS_MSG(FN)                                          \

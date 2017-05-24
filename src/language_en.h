@@ -1838,7 +1838,6 @@ static languageDefinition language_en = { whichPluralForm_en, {
     { DTYPE_NOT_UPPER_CASE,         0,   "SYSTEM, PUBLIC, W3C, DTD, EN must be upper case"                         }, /* ReportError */
     { ELEMENT_VERS_MISMATCH_ERROR,  0,   "%s element not available in %s"                                          }, /* ReportError */
     { ELEMENT_VERS_MISMATCH_WARN,   0,   "%s element not available in %s"                                          }, /* ReportError */
-    { ENCODING_IO_CONFLICT,         0,   "Output encoding does not work with standard output"                      }, /* ReportError */
     { ILLEGAL_NESTING,              0,   "%s shouldn't be nested"                                                  }, /* ReportError */
     { INCONSISTENT_NAMESPACE,       0,   "HTML namespace doesn't match content"                                    }, /* ReportError */
     { INCONSISTENT_VERSION,         0,   "HTML DOCTYPE doesn't match content"                                      }, /* ReportError */
@@ -1859,7 +1858,6 @@ static languageDefinition language_en = { whichPluralForm_en, {
     { TAG_NOT_ALLOWED_IN,           0,   "%s isn't allowed in <%s> elements"                                       }, /* ReportError */
     { TOO_MANY_ELEMENTS_IN,         0,   "too many %s elements in <%s>"                                            }, /* ReportError */
     { TOO_MANY_ELEMENTS,            0,   "too many %s elements"                                                    }, /* ReportError */
-    { UNESCAPED_ELEMENT,            0,   "unescaped %s in pre content"                                             }, /* ReportError */
     { USING_BR_INPLACE_OF,          0,   "using <br> in place of %s"                                               }, /* ReportError */
     
     { DUPLICATE_FRAMESET,           0,   "repeated FRAMESET element"                                               }, /* ReportFatal */
@@ -1870,26 +1868,26 @@ static languageDefinition language_en = { whichPluralForm_en, {
     
     { MISSING_ATTRIBUTE,            0,   "%s lacks \"%s\" attribute"                                               }, /* ReportMissingAttr */
     
-    { CUSTOM_TAG_DETECTED,          0,   "detected autonomous custom tag %s; will treat as %s"                     }, /* ReportNotice */
-    { REPLACING_ELEMENT,            0,   "replacing %s with %s"                                                    }, /* ReportNotice */
-    { TRIM_EMPTY_ELEMENT,           0,   "trimming empty %s"                                                       }, /* ReportNotice */
+    { CUSTOM_TAG_DETECTED,          0,   "detected autonomous custom tag %s; will treat as %s"                     }, /* Special */
+    { REPLACING_ELEMENT,            0,   "replacing %s with %s"                                                    }, /* ReportWarning */
+    { TRIM_EMPTY_ELEMENT,           0,   "trimming empty %s"                                                       }, /* ReportWarning */
     
     { BAD_SURROGATE_LEAD,           0,   "Trailing (Low) surrogate pair U+%04X, with no leading (High) entity, replaced with U+FFFD." }, /* ReportSurrogateError */
     { BAD_SURROGATE_PAIR,           0,   "Have out-of-range surrogate pair U+%04X:U+%04X, replaced with U+FFFD value."                }, /* ReportSurrogateError */
     { BAD_SURROGATE_TAIL,           0,   "Leading (High) surrogate pair U+%04X, with no trailing (Low) entity, replaced with U+FFFD." }, /* ReportSurrogateError */
     
     { BAD_SUMMARY_HTML5,            0,   "The summary attribute on the %s element is obsolete in HTML5"            }, /* ReportWarning */
-    { COERCE_TO_ENDTAG_WARN,        0,   "<%s> is probably intended as </%s>"                                      }, /* ReportWarning */
     { NESTED_EMPHASIS,              0,   "nested emphasis %s"                                                      }, /* ReportWarning */
     { NESTED_QUOTATION,             0,   "nested q elements, possible typo."                                       }, /* ReportWarning */
     { OBSOLETE_ELEMENT,             0,   "replacing obsolete element %s with %s"                                   }, /* ReportWarning */
     { REMOVED_HTML5,                0,   "%s element removed from HTML5"                                           }, /* ReportWarning */
     { XML_DECLARATION_DETECTED,     0,   "An XML declaration was detected. Did you mean to use input-xml?"         }, /* ReportWarning */
     
-    { COERCE_TO_ENDTAG,             0,   "<%s> is probably intended as </%s>"                                      }, /* ReportError, ReportWarning */
-    { ELEMENT_NOT_EMPTY,            0,   "%s element not empty or not closed"                                      }, /* ReportError, ReportAttrError */
-    { UNEXPECTED_END_OF_FILE,       0,   "unexpected end of file %s"                                               }, /* ReportError, ReportAttrError */
-    { UNEXPECTED_ENDTAG,            0,   "unexpected </%s>"                                                        }, /* ReportError, ReportFatal */
+    { COERCE_TO_ENDTAG,             0,   "<%s> is probably intended as </%s>"                                      }, /* ReportWarning */
+    { ELEMENT_NOT_EMPTY,            0,   "%s element not empty or not closed"                                      }, /* ReportError */
+    { UNEXPECTED_END_OF_FILE,       0,   "unexpected end of file %s"                                               }, /* ReportError */
+    { UNEXPECTED_ENDTAG,            0,   "unexpected </%s>"                                                        }, /* ReportError */
+    { UNEXPECTED_ENDTAG_XML,        0,   "unexpected </%s>"                                                        }, /* ReportFatal */
 
     
 #if SUPPORT_ACCESSIBILITY_CHECKS

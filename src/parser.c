@@ -86,11 +86,11 @@ void TY_(CoerceNode)(TidyDocImpl* doc, Node *node, TidyTagId tid, Bool obsolete,
     Node* tmp = TY_(InferredTag)(doc, tag->id);
 
     if (obsolete)
-        TY_(ReportWarning)(doc, node, tmp, OBSOLETE_ELEMENT);
+        TY_(ReportError)(doc, node, tmp, OBSOLETE_ELEMENT);
     else if (unexpected)
         TY_(ReportError)(doc, node, tmp, REPLACING_UNEX_ELEMENT);
     else
-        TY_(ReportWarning)(doc, node, tmp, REPLACING_ELEMENT);
+        TY_(ReportError)(doc, node, tmp, REPLACING_ELEMENT);
 
     TidyDocFree(doc, tmp->element);
     TidyDocFree(doc, tmp);
@@ -337,7 +337,7 @@ Node *TY_(TrimEmptyElement)( TidyDocImpl* doc, Node *element )
     if ( CanPrune(doc, element) )
     {
        if (element->type != TextNode)
-            TY_(ReportWarning)(doc, element, NULL, TRIM_EMPTY_ELEMENT);
+            TY_(ReportError)(doc, element, NULL, TRIM_EMPTY_ELEMENT);
 
         return TY_(DiscardElement)(doc, element);
     }
@@ -1763,14 +1763,14 @@ void TY_(ParseInline)( TidyDocImpl* doc, Node *element, GetTokenMode mode )
                 && TY_(nodeIsText)(element->last)
                 && !TY_(TextNodeEndWithSpace)(doc->lexer, element->last) )
             {
-                TY_(ReportWarning)(doc, element, node, COERCE_TO_ENDTAG_WARN);
+                TY_(ReportError)(doc, element, node, COERCE_TO_ENDTAG);
                 node->type = EndTag;
                 TY_(UngetToken)(doc);
                 continue;
             }
 
             if (node->attributes == NULL || element->attributes == NULL)
-                TY_(ReportWarning)(doc, element, node, NESTED_EMPHASIS);
+                TY_(ReportError)(doc, element, node, NESTED_EMPHASIS);
         }
         else if ( TY_(IsPushed)(doc, node) && node->type == StartTag && 
                   nodeIsQ(node) )
@@ -1781,7 +1781,7 @@ void TY_(ParseInline)( TidyDocImpl* doc, Node *element, GetTokenMode mode )
             \*/
             if (TY_(HTMLVersion)(doc) != HT50) 
             {
-                TY_(ReportWarning)(doc, element, node, NESTED_QUOTATION);
+                TY_(ReportError)(doc, element, node, NESTED_QUOTATION);
             }
         }
 
@@ -4511,7 +4511,7 @@ void TY_(ParseHTML)(TidyDocImpl* doc, Node *html, GetTokenMode mode)
             }
 
             if (frameset != NULL)
-                TY_(ReportFatal)(doc, html, node, DUPLICATE_FRAMESET);
+                TY_(ReportError)(doc, html, node, DUPLICATE_FRAMESET);
             else
                 frameset = node;
 
@@ -4967,9 +4967,9 @@ static void ParseXMLElement(TidyDocImpl* doc, Node *element, GetTokenMode mode)
         if (node->type == EndTag)
         {
             if (element)
-                TY_(ReportFatal)(doc, element, node, UNEXPECTED_ENDTAG_IN);
+                TY_(ReportError)(doc, element, node, UNEXPECTED_ENDTAG_IN);
             else
-                TY_(ReportFatal)(doc, element, node, UNEXPECTED_ENDTAG);
+                TY_(ReportError)(doc, NULL, node, UNEXPECTED_ENDTAG_XML);
 
             TY_(FreeNode)( doc, node);
             continue;

@@ -130,6 +130,18 @@ static void NtoS(int n, tmbstr str)
     str[n+1] = '\0';
 }
 
+/* Get an HTML version string */
+static ctmbstr HTMLVersion( TidyDocImpl* doc )
+{
+    uint versionEmitted = doc->lexer->versionEmitted;
+    uint declared = doc->lexer->doctype;
+    uint version = versionEmitted == 0 ? declared : versionEmitted;
+    ctmbstr result = TY_(HTMLVersionNameFromCode)(version, 0);
+    if (!result)
+        result = tidyLocalizedString(STRING_HTML_PROPRIETARY);
+    return result;
+}
+
 
 /*********************************************************************
  * Message Writing Functions
@@ -293,102 +305,27 @@ TidyMessageImpl *formatCustomTagDetected(TidyDocImpl* doc, Node *element, Node *
 
 /*********************************************************************
  * High Level Message Writing Functions - General
- * When adding new reports to LibTidy, preference should be given
- * to one of these existing, general purpose message writing
- * functions, if at all possible.
+ * This general purpose output routine handles any type of messages
+ * related to a node.
  *********************************************************************/
-
-
-void TY_(ReportWarning)(TidyDocImpl* doc, Node *element, Node *node, uint code)
-{
-    TidyMessageImpl *message = NULL;
-    Node* rpt = (element ? element : node);
-    char nodedesc[256] = { 0 };
-    char elemdesc[256] = { 0 };
-
-    TagToString(node, nodedesc, sizeof(nodedesc));
-    
-    if ( element )
-        TagToString(element, elemdesc, sizeof(elemdesc));
-
-    switch (code)
-    {
-        case NESTED_QUOTATION:
-        case XML_DECLARATION_DETECTED:
-            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning );
-            break;
-            
-        case TRIM_EMPTY_ELEMENT:
-            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning, elemdesc );
-            break;
-            
-        case BAD_SUMMARY_HTML5:
-        case NESTED_EMPHASIS:
-        case REMOVED_HTML5:
-            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning, nodedesc );
-            break;
-            
-        case OBSOLETE_ELEMENT:
-        case REPLACING_ELEMENT:
-            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning, elemdesc, nodedesc );
-            break;
-
-        case COERCE_TO_ENDTAG_WARN:
-            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning, node->element, node->element );
-            break;
-    }
-
-    messageOut( message );
-}
-
 
 void TY_(ReportError)(TidyDocImpl* doc, Node *element, Node *node, uint code)
 {
     TidyMessageImpl *message = NULL;
-    TidyMessageImpl *message2 = NULL; /* extra, when TidyShowWarnings */
     char nodedesc[ 256 ] = {0};
     char elemdesc[ 256 ] = {0};
     Node* rpt = ( element ? element : node );
-    uint versionEmitted, declared, version;
-    ctmbstr extra_string = NULL;
 
     TagToString(node, nodedesc, sizeof(nodedesc));
 
+    if ( element )
+        TagToString(element, elemdesc, sizeof(elemdesc));
+
     switch ( code )
     {
-        case INSERTING_TAG:
-        case MISSING_STARTTAG:
-        case UNEXPECTED_ENDTAG:
-        case TOO_MANY_ELEMENTS:
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning, node->element );
-            break;
-
-        case CANT_BE_NESTED:
-        case NOFRAMES_CONTENT:
-        case PROPRIETARY_ELEMENT:
-        case UNESCAPED_ELEMENT:
-        case USING_BR_INPLACE_OF:
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning, nodedesc );
-            break;
-
-        case ELEMENT_VERS_MISMATCH_ERROR:
-            versionEmitted = doc->lexer->versionEmitted;
-            declared = doc->lexer->doctype;
-            version = versionEmitted == 0 ? declared : versionEmitted;
-            extra_string = TY_(HTMLVersionNameFromCode)(version, 0);
-            if (!extra_string)
-                extra_string = tidyLocalizedString(STRING_HTML_PROPRIETARY);
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyError, nodedesc, extra_string );
-            break;
-            
-        case ELEMENT_VERS_MISMATCH_WARN:
-            versionEmitted = doc->lexer->versionEmitted;
-            declared = doc->lexer->doctype;
-            version = versionEmitted == 0 ? declared : versionEmitted;
-            extra_string = TY_(HTMLVersionNameFromCode)(version, 0);
-            if (!extra_string)
-                extra_string = tidyLocalizedString(STRING_HTML_PROPRIETARY);
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning, nodedesc, extra_string );
+        case SPACE_PRECEDING_XMLDECL:
+            /* @TODO: Should this be a TidyInfo "silent" fix? */
+            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning );
             break;
 
         case BAD_CDATA_CONTENT:
@@ -401,35 +338,66 @@ void TY_(ReportError)(TidyDocImpl* doc, Node *element, Node *node, uint code)
         case INCONSISTENT_VERSION:
         case MALFORMED_COMMENT:
         case MALFORMED_DOCTYPE:
+        case MISSING_DOCTYPE:
         case MISSING_TITLE_ELEMENT:
+        case NESTED_QUOTATION:
+        case XML_DECLARATION_DETECTED:
             message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning );
             break;
-
-        case COERCE_TO_ENDTAG:
-        case NON_MATCHING_ENDTAG:
-            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning, node->element, node->element );
-            break;
-
-        case TOO_MANY_ELEMENTS_IN:
-        case UNEXPECTED_ENDTAG_IN:
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning, node->element, node->element );
-            message2 = TY_(tidyMessageCreateWithNode)(doc, node, PREVIOUS_LOCATION, TidyInfo, element->element );
-            break;
-
-        case ENCODING_IO_CONFLICT:
-        case MISSING_DOCTYPE:
-        case SPACE_PRECEDING_XMLDECL:
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning );
+            
+        case SUSPECTED_MISSING_QUOTE:
+        case DUPLICATE_FRAMESET:
+            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyError );
             break;
 
         case ELEMENT_NOT_EMPTY:
         case ILLEGAL_NESTING:
         case TRIM_EMPTY_ELEMENT:
         case UNEXPECTED_END_OF_FILE:
-            TagToString(element, elemdesc, sizeof(elemdesc));
-            message = TY_(tidyMessageCreateWithNode)(doc, element, code, TidyWarning, elemdesc );
+            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning, elemdesc );
             break;
 
+        case REPLACING_UNEX_ELEMENT:
+        case OBSOLETE_ELEMENT:
+        case REPLACING_ELEMENT:
+            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning, elemdesc, nodedesc );
+            break;
+
+        case CANT_BE_NESTED:
+        case NOFRAMES_CONTENT:
+        case USING_BR_INPLACE_OF:
+            // Can i use rpt here? No; element has a value in every case.
+            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning, nodedesc );
+            break;
+
+        case UNKNOWN_ELEMENT:
+        case UNKNOWN_ELEMENT_LOOKS_CUSTOM:
+            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyError, nodedesc );
+            break;
+
+       case BAD_SUMMARY_HTML5:
+        case NESTED_EMPHASIS:
+        case PROPRIETARY_ELEMENT:
+        case REMOVED_HTML5:
+            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning, nodedesc );
+            break;
+
+        case TAG_NOT_ALLOWED_IN:
+            // Can i use rpt here? No; element has a value.
+            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning, nodedesc, element->element );
+            break;
+
+        case INSERTING_TAG:
+        case MISSING_STARTTAG:
+        case UNEXPECTED_ENDTAG:
+        case TOO_MANY_ELEMENTS:
+            // Can i use rpt here? No; element has a value in every case.
+            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning, node->element );
+            break;
+
+        case UNEXPECTED_ENDTAG_XML:  /* generated by XML docs */
+            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyError, node->element );
+            break;
 
         case MISSING_ENDTAG_FOR:
             message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning, element->element );
@@ -439,67 +407,57 @@ void TY_(ReportError)(TidyDocImpl* doc, Node *element, Node *node, uint code)
             message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning, element->element, nodedesc );
             break;
 
+        case COERCE_TO_ENDTAG:
+        case NON_MATCHING_ENDTAG:
+        case TOO_MANY_ELEMENTS_IN:
+            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning, node->element, node->element );
+            break;
+
+        case UNEXPECTED_ENDTAG_IN:
+            // Can i use rpt here? No; element has a value.
+            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyError, node->element, element->element );
+            break;
+
+
+
+        /*************
+          SPECIALS
+         *************/
+
+        case ELEMENT_VERS_MISMATCH_WARN:
+            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning, nodedesc, HTMLVersion(doc) );
+
+        case ELEMENT_VERS_MISMATCH_ERROR:
+            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyError, nodedesc, HTMLVersion(doc) );
+
         case DISCARDING_UNEXPECTED:
             /* Force error if in a bad form, or
              Issue #166 - repeated <main> element
              */
+            // Can i use rpt here? No; element has a value
             message = TY_(tidyMessageCreateWithNode)(doc, node, code, doc->badForm ? TidyError : TidyWarning, nodedesc );
             break;
 
-        case TAG_NOT_ALLOWED_IN:
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning, nodedesc, element->element );
-            message2 = TY_(tidyMessageCreateWithNode)(doc, element, PREVIOUS_LOCATION, TidyInfo, element->element );
-            break;
-            
-        case REPLACING_UNEX_ELEMENT:
-            TagToString(element, elemdesc, sizeof(elemdesc));
-            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyWarning, elemdesc, nodedesc );
+        case PREVIOUS_LOCATION:
+            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyInfo, element->element );
             break;
 
-        case REMOVED_HTML5:
-            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyError, nodedesc );
-            break;
     }
 
     messageOut( message );
-
-    /* Although the callback is always executed for message2, it's only
-       added to the output sink if TidyShowWarnings is enabled. */
-    if (cfgBool( doc, TidyShowWarnings ))
-        messageOut( message2 );
-}
-
-
-void TY_(ReportFatal)( TidyDocImpl* doc, Node *element, Node *node, uint code)
-{
-    TidyMessageImpl *message = NULL;
-    char nodedesc[ 256 ] = {0};
-    Node* rpt = ( element ? element : node );
 
     switch ( code )
     {
-        case SUSPECTED_MISSING_QUOTE:
-        case DUPLICATE_FRAMESET:
-            message = TY_(tidyMessageCreateWithNode)(doc, rpt, code, TidyError );
+        case TAG_NOT_ALLOWED_IN:
+            TY_(ReportError)(doc, element, node, PREVIOUS_LOCATION);
             break;
 
-        case UNKNOWN_ELEMENT:
-        case UNKNOWN_ELEMENT_LOOKS_CUSTOM:
-            TagToString(node, nodedesc, sizeof(nodedesc));
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyError, nodedesc );
-            break;
-
-        case UNEXPECTED_ENDTAG_IN:
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyError, node->element, element->element );
-            break;
-
-        case UNEXPECTED_ENDTAG:  /* generated by XML docs */
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyError, node->element );
+        case TOO_MANY_ELEMENTS_IN:
+            TY_(ReportError)(doc, node, node, PREVIOUS_LOCATION);
             break;
     }
-
-    messageOut( message );
 }
+
 
 
 /*********************************************************************
