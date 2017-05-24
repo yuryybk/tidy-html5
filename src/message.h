@@ -44,21 +44,10 @@ ctmbstr TY_(tidyLibraryVersion)(void);
 
 
 /** @} */
-/** @name High Level Message Writing Functions - General */
+/** @name High Level Message Writing Functions */
 /** @{ */
 
 void TY_(Report)(TidyDocImpl* doc, Node *element, Node *node, uint code, ...);
-
-//void TY_(ReportWarning)(TidyDocImpl* doc, Node *element, Node *node, uint code);
-void TY_(ReportError)(TidyDocImpl* doc, Node* element, Node* node, uint code);
-//void TY_(ReportFatal)(TidyDocImpl* doc, Node* element, Node* node, uint code);
-
-
-/** @} */
-/** @name High Level Message Writing Functions - Specific */
-/** @{ */
-
-
 void TY_(FileError)( TidyDocImpl* doc, ctmbstr file, TidyReportLevel level, uint code );
 void TY_(ReportAttrError)( TidyDocImpl* doc, Node* node, AttVal* av, uint code );
 void TY_(ReportBadArgument)( TidyDocImpl* doc, ctmbstr option );
