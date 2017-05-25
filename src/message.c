@@ -233,6 +233,7 @@ static messageFormatter formatAttributeReport;
 static messageFormatter formatBadArgument;
 static messageFormatter formatCustomTagDetected;
 static messageFormatter formatFileError;
+static messageFormatter formatIntegerArgs;
 static messageFormatter formatGeneric;
 static messageFormatter formatMultiLevel;
 
@@ -466,6 +467,18 @@ TidyMessageImpl *formatCustomTagDetected(TidyDocImpl* doc, Node *element, Node *
 
 /* Provides formatting for file-related errors. */
 TidyMessageImpl *formatFileError(TidyDocImpl* doc, Node *element, Node *node, uint code, uint level, va_list args)
+{
+    ctmbstr file;
+    
+    if ( (file = va_arg( args, ctmbstr)) )
+        return TY_(tidyMessageCreate)( doc, code, level, file );
+ 
+    return NULL;
+}
+
+
+/* Provides formatting for items with integers in the va_list. */
+TidyMessageImpl *formatIntegerArgs(TidyDocImpl* doc, Node *element, Node *node, uint code, uint level, va_list args)
 {
     ctmbstr file;
     
