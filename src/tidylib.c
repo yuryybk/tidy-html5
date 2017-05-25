@@ -910,7 +910,7 @@ FILE* TIDY_CALL   tidySetErrorFile( TidyDoc tdoc, ctmbstr errfilnam )
             return errout;
         }
         else /* Emit message to current error sink */
-            TY_(FileError)( impl, errfilnam, TidyError, FILE_CANT_OPEN );
+            TY_(ReportFileError)( impl, errfilnam, FILE_CANT_OPEN );
     }
     return NULL;
 }
@@ -1080,7 +1080,7 @@ int   tidyDocParseFile( TidyDocImpl* doc, ctmbstr filnam )
 
     if ( !fin )
     {
-        TY_(FileError)( doc, filnam, TidyError, FILE_NOT_FILE );
+        TY_(ReportFileError)( doc, filnam, FILE_NOT_FILE );
         return status;
     }
 
@@ -1117,7 +1117,7 @@ int   tidyDocParseFile( TidyDocImpl* doc, ctmbstr filnam )
         TY_(freeStreamIn)(in);
     }
     else /* Error message! */
-        TY_(FileError)( doc, filnam, TidyError, FILE_CANT_OPEN );
+        TY_(ReportFileError)( doc, filnam, FILE_CANT_OPEN );
     return status;
 #endif
 }
@@ -1231,7 +1231,7 @@ int         tidyDocSaveFile( TidyDocImpl* doc, ctmbstr filnam )
 #endif /* PRESERVFILETIMES */
     }
     if ( status < 0 ) /* Error message! */
-        TY_(FileError)( doc, filnam, TidyError, FILE_CANT_OPEN );
+        TY_(ReportFileError)( doc, filnam, FILE_CANT_OPEN );
     return status;
 }
 

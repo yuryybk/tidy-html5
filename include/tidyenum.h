@@ -101,6 +101,7 @@ extern "C" {
  */
 #define FOREACH_MSG_MISC(FN) \
 /** File can't be opened */                        FN(FILE_CANT_OPEN)              \
+/** Can't open config file */                      FN(FILE_CANT_OPEN_CONFIG)       \
 /** Not a file */                                  FN(FILE_NOT_FILE)               \
 /** line %d column %d */                           FN(LINE_COLUMN_STRING)          \
 /** Document content looks like %s */              FN(STRING_CONTENT_LOOKS)        \
@@ -1348,16 +1349,17 @@ typedef enum
  */
 typedef enum
 {
-    TidyInfo = 350,       /**< Report: Information about markup usage */
-    TidyWarning,          /**< Report: Warning message */
-    TidyConfig,           /**< Report: Configuration error */
-    TidyAccess,           /**< Report: Accessibility message */
-    TidyError,            /**< Report: Error message - output suppressed */
-    TidyBadDocument,      /**< Report: I/O or file system error */
-    TidyFatal,            /**< Report: Crash! */
-    TidyDialogueInfo,     /**< Dialogue: Non-document related information */
-    TidyDialogueSummary,  /**< Dialogue: Summary-related information */
-    TidyDialogueDoc,      /**< Dialogue: Document-related information */
+    TidyInfo = 350,                /**< Report: Information about markup usage */
+    TidyWarning,                   /**< Report: Warning message */
+    TidyConfig,                    /**< Report: Configuration error */
+    TidyAccess,                    /**< Report: Accessibility message */
+    TidyError,                     /**< Report: Error message - output suppressed */
+    TidyBadDocument,               /**< Report: I/O or file system error; deprecated. */
+    TidyBadFile = TidyBadDocument, /**< Report: I/O or file system error; new. */
+    TidyFatal,                     /**< Report: Crash! */
+    TidyDialogueInfo,              /**< Dialogue: Non-document related information */
+    TidyDialogueSummary,           /**< Dialogue: Summary-related information */
+    TidyDialogueDoc,               /**< Dialogue: Document-related information */
 } TidyReportLevel;
 
     

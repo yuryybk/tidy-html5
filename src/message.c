@@ -66,7 +66,7 @@ static Bool UpdateCount( TidyDocImpl* doc, TidyReportLevel level )
       case TidyError:
           doc->errors++;
           break;
-      case TidyBadDocument:
+      case TidyBadFile:
           doc->docErrors++;
           break;
       case TidyFatal:
@@ -230,6 +230,7 @@ typedef TidyMessageImpl*(messageFormatter)(TidyDocImpl* doc, Node *element, Node
 
 /* Forward declarations of messageFormatter functions. */
 static messageFormatter formatCustomTagDetected;
+static messageFormatter formatFileError;
 static messageFormatter formatGeneric;
 static messageFormatter formatMultiLevel;
 
@@ -260,6 +261,9 @@ static struct _dispatchTable {
     { ELEMENT_NOT_EMPTY,            TidyWarning, formatGeneric           },
     { ELEMENT_VERS_MISMATCH_ERROR,  TidyError,   formatGeneric           },
     { ELEMENT_VERS_MISMATCH_WARN,   TidyWarning, formatGeneric           },
+    { FILE_CANT_OPEN,               TidyBadFile, formatFileError         },
+    { FILE_CANT_OPEN_CONFIG,        TidyConfig,  formatFileError         },
+    { FILE_NOT_FILE,                TidyBadFile, formatFileError         },
     { ILLEGAL_NESTING,              TidyWarning, formatGeneric           },
     { INCONSISTENT_NAMESPACE,       TidyWarning, formatGeneric           },
     { INCONSISTENT_VERSION,         TidyWarning, formatGeneric           },
@@ -333,6 +337,18 @@ TidyMessageImpl *formatCustomTagDetected(TidyDocImpl* doc, Node *element, Node *
     return TY_(tidyMessageCreateWithNode)(doc, element, code, TidyInfo, elemdesc, tagtype );
 }
 
+
+/* Provides formatting for file-related errors.
+*/
+TidyMessageImpl *formatFileError(TidyDocImpl* doc, Node *element, Node *node, uint code, uint level, va_list args)
+{
+    ctmbstr file;
+    
+    if ( (file = va_arg( args, ctmbstr)) )
+        return TY_(tidyMessageCreate)( doc, code, level, file );
+ 
+    return NULL;
+}
 
 /* Provides general formatting for the majority of Tidy's reports. Because most reports
 ** use the same basic data derived from the element and node, this formatter covers the
@@ -530,7 +546,8 @@ static void vReport(TidyDocImpl* doc, Node *element, Node *node, uint code, va_l
 /* This single Report output function uses the correct formatter with all
 ** possible, relevant data that can be reported. The only real drawbacks are
 ** having to pass NULL when some of the values aren't used, and the lack of
-** type safety by using the variable arguments.
+** type safety by using the variable arguments. To counter this some convenience
+** report output functions exist, too.
 */
 void TY_(Report)(TidyDocImpl* doc, Node *element, Node *node, uint code, ...)
 {
@@ -541,10 +558,12 @@ void TY_(Report)(TidyDocImpl* doc, Node *element, Node *node, uint code, ...)
 }
 
 
-void TY_(FileError)( TidyDocImpl* doc, ctmbstr file, TidyReportLevel level, uint code )
+/* A convenience Report output function for a few reports that don't require
+** elements and/or nodes.
+*/
+void TY_(ReportFileError)( TidyDocImpl* doc, ctmbstr file, uint code )
 {
-    TidyMessageImpl *message = TY_(tidyMessageCreate)( doc, code, level, file);
-    messageOut( message );
+    TY_(Report)(doc, NULL, NULL, code, file);
 }
 
 

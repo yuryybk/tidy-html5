@@ -1536,7 +1536,7 @@ static languageDefinition language_en = { whichPluralForm_en, {
     { TidyConfig,             0,   "Config: "        },
     { TidyAccess,             0,   "Access: "        },
     { TidyError,              0,   "Error: "         },
-    { TidyBadDocument,        0,   "Document: "      },
+    { TidyBadFile,            0,   "File: "          },
     { TidyFatal,              0,   "Panic: "         },
     { TidyDialogueInfo,       0,   "Information: "   },
     { TidyDialogueSummary,    0,   "Summary: "       },
@@ -1549,6 +1549,7 @@ static languageDefinition language_en = { whichPluralForm_en, {
      ** @rename enum generator FOREACH_MSG_MISC
      ********************************************/
     { FILE_CANT_OPEN,               0,   "Can't open \"%s\"\n"                                                     },
+    { FILE_CANT_OPEN_CONFIG,        0,   "Can't open config file \"%s\"\n"                                         },
     { FILE_NOT_FILE,                0,   "\"%s\" is not a file!\n"                                                 },
     { LINE_COLUMN_STRING,           0,   "line %d column %d - "                                                    },
     { STRING_CONTENT_LOOKS,         0,   "Document content looks like %s"                                          },

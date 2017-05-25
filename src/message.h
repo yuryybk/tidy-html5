@@ -48,7 +48,7 @@ ctmbstr TY_(tidyLibraryVersion)(void);
 /** @{ */
 
 void TY_(Report)(TidyDocImpl* doc, Node *element, Node *node, uint code, ...);
-void TY_(FileError)( TidyDocImpl* doc, ctmbstr file, TidyReportLevel level, uint code );
+void TY_(ReportFileError)( TidyDocImpl* doc, ctmbstr file, uint code );
 void TY_(ReportAttrError)( TidyDocImpl* doc, Node* node, AttVal* av, uint code );
 void TY_(ReportBadArgument)( TidyDocImpl* doc, ctmbstr option );
 void TY_(ReportEncodingError)(TidyDocImpl* doc, uint code, uint c, Bool discarded);

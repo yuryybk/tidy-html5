@@ -577,7 +577,7 @@ static languageDefinition language_fr = { whichPluralForm_fr, {
     { TidyConfig,                                    0, "Config:"                                                                                                },
     { TidyAccess,                                    0, "Accès:"                                                                                                 },
     { TidyError,                                     0, "Erreur:"                                                                                                },
-    { TidyBadDocument,                               0, "Document:"                                                                                              },
+    { TidyBadFile,                                   0, "Fichier:"                                                                                               },
     { TidyFatal,                                     0, "Panique:"                                                                                               },
     { TidyDialogueInfo,                              0, "Informations: "                                                                                         },
     { TidyDialogueSummary,                           0, "Résumé:"                                                                                                },
