@@ -229,6 +229,8 @@ typedef TidyMessageImpl*(messageFormatter)(TidyDocImpl* doc, Node *element, Node
 
 
 /* Forward declarations of messageFormatter functions. */
+static messageFormatter formatAttributeReport;
+static messageFormatter formatBadArgument;
 static messageFormatter formatCustomTagDetected;
 static messageFormatter formatFileError;
 static messageFormatter formatGeneric;
@@ -246,6 +248,12 @@ static struct _dispatchTable {
     messageFormatter *handler; /**< The formatter for the report. */
     uint next;                 /**< If multiple codes should be displayed, which is next? */
 } dispatchTable[] = {
+    { ANCHOR_NOT_UNIQUE,            TidyWarning, formatAttributeReport   },
+    { ATTR_VALUE_NOT_LCASE,         TidyWarning, formatAttributeReport   },
+    { ATTRIBUTE_IS_NOT_ALLOWED,     TidyWarning, formatAttributeReport   },
+    { BACKSLASH_IN_URI,             TidyWarning, formatAttributeReport   },
+    { BAD_ATTRIBUTE_VALUE_REPLACED, TidyWarning, formatAttributeReport   },
+    { BAD_ATTRIBUTE_VALUE,          TidyWarning, formatAttributeReport   },
     { BAD_CDATA_CONTENT,            TidyWarning, formatGeneric           },
     { BAD_COMMENT_CHARS,            TidyWarning, formatGeneric           },
     { BAD_SUMMARY_HTML5,            TidyWarning, formatGeneric           },
@@ -261,44 +269,70 @@ static struct _dispatchTable {
     { ELEMENT_NOT_EMPTY,            TidyWarning, formatGeneric           },
     { ELEMENT_VERS_MISMATCH_ERROR,  TidyError,   formatGeneric           },
     { ELEMENT_VERS_MISMATCH_WARN,   TidyWarning, formatGeneric           },
-    { FILE_CANT_OPEN,               TidyBadFile, formatFileError         },
+    { ESCAPED_ILLEGAL_URI,          TidyWarning, formatAttributeReport   },
     { FILE_CANT_OPEN_CONFIG,        TidyConfig,  formatFileError         },
+    { FILE_CANT_OPEN,               TidyBadFile, formatFileError         },
     { FILE_NOT_FILE,                TidyBadFile, formatFileError         },
+    { FIXED_BACKSLASH,              TidyWarning, formatAttributeReport   },
+    { ID_NAME_MISMATCH,             TidyWarning, formatAttributeReport   },
     { ILLEGAL_NESTING,              TidyWarning, formatGeneric           },
+    { ILLEGAL_URI_CODEPOINT,        TidyWarning, formatAttributeReport   },
+    { ILLEGAL_URI_REFERENCE,        TidyWarning, formatAttributeReport   },
     { INCONSISTENT_NAMESPACE,       TidyWarning, formatGeneric           },
     { INCONSISTENT_VERSION,         TidyWarning, formatGeneric           },
+    { INSERTING_AUTO_ATTRIBUTE,     TidyWarning, formatAttributeReport   },
     { INSERTING_TAG,                TidyWarning, formatGeneric           },
+    { INVALID_ATTRIBUTE,            TidyWarning, formatAttributeReport   },
+    { INVALID_XML_ID,               TidyWarning, formatAttributeReport   },
+    { JOINING_ATTRIBUTE,            TidyWarning, formatAttributeReport   },
     { MALFORMED_COMMENT,            TidyWarning, formatGeneric           },
     { MALFORMED_DOCTYPE,            TidyWarning, formatGeneric           },
+    { MISMATCHED_ATTRIBUTE_ERROR,   TidyError,   formatAttributeReport   },
+    { MISMATCHED_ATTRIBUTE_WARN,    TidyWarning, formatAttributeReport   },
+    { MISSING_ATTR_VALUE,           TidyWarning, formatAttributeReport   },
     { MISSING_DOCTYPE,              TidyWarning, formatGeneric           },
     { MISSING_ENDTAG_BEFORE,        TidyWarning, formatGeneric           },
     { MISSING_ENDTAG_FOR,           TidyWarning, formatGeneric           },
+    { MISSING_IMAGEMAP,             TidyWarning, formatAttributeReport   },
+    { MISSING_QUOTEMARK,            TidyWarning, formatAttributeReport   },
     { MISSING_STARTTAG,             TidyWarning, formatGeneric           },
     { MISSING_TITLE_ELEMENT,        TidyWarning, formatGeneric           },
     { NESTED_EMPHASIS,              TidyWarning, formatGeneric           },
     { NESTED_QUOTATION,             TidyWarning, formatGeneric           },
+    { NEWLINE_IN_URI,               TidyWarning, formatAttributeReport   },
     { NOFRAMES_CONTENT,             TidyWarning, formatGeneric           },
     { NON_MATCHING_ENDTAG,          TidyWarning, formatGeneric           },
     { OBSOLETE_ELEMENT,             TidyWarning, formatGeneric           },
     { PREVIOUS_LOCATION,            TidyInfo,    formatGeneric           },
+    { PROPRIETARY_ATTR_VALUE,       TidyWarning, formatAttributeReport   },
+    { PROPRIETARY_ATTRIBUTE,        TidyWarning, formatAttributeReport   },
     { PROPRIETARY_ELEMENT,          TidyWarning, formatGeneric           },
     { REMOVED_HTML5,                TidyWarning, formatGeneric           },
+    { REPEATED_ATTRIBUTE,           TidyWarning, formatAttributeReport   },
     { REPLACING_ELEMENT,            TidyWarning, formatGeneric           },
     { REPLACING_UNEX_ELEMENT,       TidyWarning, formatGeneric           },
     { SPACE_PRECEDING_XMLDECL,      TidyWarning, formatGeneric           },
+    { STRING_MISSING_MALFORMED,     TidyConfig,  formatBadArgument       },
     { SUSPECTED_MISSING_QUOTE,      TidyError,   formatGeneric           },
     { TAG_NOT_ALLOWED_IN,           TidyWarning, formatGeneric, PREVIOUS_LOCATION },
     { TOO_MANY_ELEMENTS_IN,         TidyWarning, formatGeneric, PREVIOUS_LOCATION },
     { TOO_MANY_ELEMENTS,            TidyWarning, formatGeneric           },
     { TRIM_EMPTY_ELEMENT,           TidyWarning, formatGeneric           },
+    { UNEXPECTED_END_OF_FILE_ATTR,  TidyWarning, formatAttributeReport   },
     { UNEXPECTED_END_OF_FILE,       TidyWarning, formatGeneric           },
     { UNEXPECTED_ENDTAG_IN,         TidyError,   formatGeneric           },
     { UNEXPECTED_ENDTAG_XML,        TidyError,   formatGeneric           },
     { UNEXPECTED_ENDTAG,            TidyWarning, formatGeneric           },
+    { UNEXPECTED_EQUALSIGN,         TidyWarning, formatAttributeReport   },
+    { UNEXPECTED_GT,                TidyWarning, formatAttributeReport   },
+    { UNEXPECTED_QUOTEMARK,         TidyWarning, formatAttributeReport   },
     { UNKNOWN_ELEMENT_LOOKS_CUSTOM, TidyError,   formatGeneric           },
     { UNKNOWN_ELEMENT,              TidyError,   formatGeneric           },
     { USING_BR_INPLACE_OF,          TidyWarning, formatGeneric           },
+    { WHITE_IN_URI,                 TidyWarning, formatAttributeReport   },
+    { XML_ATTRIBUTE_VALUE,          TidyWarning, formatAttributeReport   },
     { XML_DECLARATION_DETECTED,     TidyWarning, formatGeneric           },
+    { XML_ID_SYNTAX,                TidyWarning, formatAttributeReport   },
     { 0, 0, NULL }
 };
 
@@ -308,6 +342,98 @@ static struct _dispatchTable {
  * These individual message formatters populate messages with the
  * correct, pertinent data.
  *********************************************************************/
+
+
+/* Provides formatting for the Attribute-related reports. */
+TidyMessageImpl *formatAttributeReport(TidyDocImpl* doc, Node *element, Node *node, uint code, uint level, va_list args)
+{
+    AttVal *av = NULL;
+    char const *name = "NULL", *value = "NULL";
+    char tagdesc[64];
+    
+    TagToString(node, tagdesc, sizeof(tagdesc));
+    
+    if ( ( av = va_arg(args, AttVal*) ) )
+    {
+        if (av->attribute)
+            name = av->attribute;
+        if (av->value)
+            value = av->value;
+    }
+    
+    switch (code)
+    {
+        case BACKSLASH_IN_URI:
+        case ESCAPED_ILLEGAL_URI:
+        case FIXED_BACKSLASH:
+        case ID_NAME_MISMATCH:
+        case ILLEGAL_URI_CODEPOINT:
+        case ILLEGAL_URI_REFERENCE:
+        case INVALID_XML_ID:
+        case MISSING_IMAGEMAP:
+        case MISSING_QUOTEMARK:
+        case NEWLINE_IN_URI:
+        case UNEXPECTED_EQUALSIGN:
+        case UNEXPECTED_GT:
+        case UNEXPECTED_QUOTEMARK:
+        case WHITE_IN_URI:
+            return TY_(tidyMessageCreateWithNode)(doc, node, code, level, tagdesc );
+            break;
+            
+        case ATTRIBUTE_IS_NOT_ALLOWED:
+        case JOINING_ATTRIBUTE:
+        case MISSING_ATTR_VALUE:
+        case PROPRIETARY_ATTRIBUTE:
+        case XML_ATTRIBUTE_VALUE:
+            return TY_(tidyMessageCreateWithNode)(doc, node, code, level, tagdesc, name );
+            break;
+            
+        case BAD_ATTRIBUTE_VALUE:
+        case BAD_ATTRIBUTE_VALUE_REPLACED:
+        case INSERTING_AUTO_ATTRIBUTE:
+        case INVALID_ATTRIBUTE:
+            return TY_(tidyMessageCreateWithNode)(doc, node, code, level, tagdesc, name, value );
+            break;
+            
+        case MISMATCHED_ATTRIBUTE_ERROR:
+        case MISMATCHED_ATTRIBUTE_WARN:
+            return TY_(tidyMessageCreateWithNode)(doc, node, code, level, tagdesc, name, HTMLVersion(doc));
+            break;
+            
+        case ANCHOR_NOT_UNIQUE:
+        case ATTR_VALUE_NOT_LCASE:
+        case PROPRIETARY_ATTR_VALUE:
+        case XML_ID_SYNTAX:
+            return TY_(tidyMessageCreateWithNode)(doc, node, code, level, tagdesc, value );
+            break;
+            
+        case REPEATED_ATTRIBUTE:
+            return TY_(tidyMessageCreateWithNode)(doc, node, code, level, tagdesc, value, name );
+            break;
+            
+        case UNEXPECTED_END_OF_FILE_ATTR:
+            /* on end of file adjust reported position to end of input */
+            doc->lexer->lines   = doc->docIn->curline;
+            doc->lexer->columns = doc->docIn->curcol;
+            return TY_(tidyMessageCreateWithLexer)(doc, code, level, tagdesc );
+            break;
+    }
+    
+    return NULL;
+}
+
+
+/* Provides formatting for bad-argument errors. */
+TidyMessageImpl *formatBadArgument(TidyDocImpl* doc, Node *element, Node *node, uint code, uint level, va_list args)
+{
+    ctmbstr option;
+    
+    if ( (option = va_arg( args, ctmbstr)) )
+        return TY_(tidyMessageCreate)( doc, code, level, option );
+    
+    return NULL;
+}
+
 
 /* Provides special formatting for the CUSTOM_TAG_DETECTED report. */
 TidyMessageImpl *formatCustomTagDetected(TidyDocImpl* doc, Node *element, Node *node, uint code, uint level, va_list args)
@@ -338,8 +464,7 @@ TidyMessageImpl *formatCustomTagDetected(TidyDocImpl* doc, Node *element, Node *
 }
 
 
-/* Provides formatting for file-related errors.
-*/
+/* Provides formatting for file-related errors. */
 TidyMessageImpl *formatFileError(TidyDocImpl* doc, Node *element, Node *node, uint code, uint level, va_list args)
 {
     ctmbstr file;
@@ -349,6 +474,7 @@ TidyMessageImpl *formatFileError(TidyDocImpl* doc, Node *element, Node *node, ui
  
     return NULL;
 }
+
 
 /* Provides general formatting for the majority of Tidy's reports. Because most reports
 ** use the same basic data derived from the element and node, this formatter covers the
@@ -558,121 +684,27 @@ void TY_(Report)(TidyDocImpl* doc, Node *element, Node *node, uint code, ...)
 }
 
 
-/* A convenience Report output function for a few reports that don't require
-** elements and/or nodes.
-*/
+/*********************************************************************
+ * Convenience Reporting Functions
+ * Functions that don't require the full signature of TY_(Report),
+ * and help protect type safety by avoiding variable arguments.
+ *********************************************************************/
+
+
 void TY_(ReportFileError)( TidyDocImpl* doc, ctmbstr file, uint code )
 {
     TY_(Report)(doc, NULL, NULL, code, file);
 }
 
-
 void TY_(ReportAttrError)(TidyDocImpl* doc, Node *node, AttVal *av, uint code)
 {
-    TidyMessageImpl *message = NULL;
-    char const *name = "NULL", *value = "NULL";
-    char tagdesc[64];
-    uint version;
-    ctmbstr extra_string;
-
-    TagToString(node, tagdesc, sizeof(tagdesc));
-
-    if (av)
-    {
-        if (av->attribute)
-            name = av->attribute;
-        if (av->value)
-            value = av->value;
-    }
-
-    switch (code)
-    {
-        case MISSING_ATTR_VALUE:
-        case XML_ATTRIBUTE_VALUE:
-        case PROPRIETARY_ATTRIBUTE:
-        case JOINING_ATTRIBUTE:
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning, tagdesc, name );
-            break;
-
-        case ATTRIBUTE_IS_NOT_ALLOWED:
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning, tagdesc, name );
-            break;
-
-        case MISMATCHED_ATTRIBUTE_WARN:
-            version = doc->lexer->versionEmitted == 0 ? doc->lexer->doctype : doc->lexer->versionEmitted;
-            extra_string = TY_(HTMLVersionNameFromCode)(version, 0);
-            if (!extra_string)
-                extra_string = tidyLocalizedString(STRING_HTML_PROPRIETARY);
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning, tagdesc, name, extra_string );
-            break;
-
-        case MISMATCHED_ATTRIBUTE_ERROR:
-            version = doc->lexer->versionEmitted == 0 ? doc->lexer->doctype : doc->lexer->versionEmitted;
-            extra_string = TY_(HTMLVersionNameFromCode)(version, 0);
-            if (!extra_string)
-                extra_string = tidyLocalizedString(STRING_HTML_PROPRIETARY);
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyError, tagdesc, name, extra_string );
-            break;
-
-        case BAD_ATTRIBUTE_VALUE:
-        case BAD_ATTRIBUTE_VALUE_REPLACED:
-        case INVALID_ATTRIBUTE:
-        case INSERTING_AUTO_ATTRIBUTE:
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning, tagdesc, name, value );
-            break;
-
-        case UNEXPECTED_QUOTEMARK:
-        case MISSING_QUOTEMARK:
-        case ID_NAME_MISMATCH:
-        case BACKSLASH_IN_URI:
-        case FIXED_BACKSLASH:
-        case ILLEGAL_URI_CODEPOINT:
-        case ILLEGAL_URI_REFERENCE:
-        case ESCAPED_ILLEGAL_URI:
-        case NEWLINE_IN_URI:
-        case WHITE_IN_URI:
-        case UNEXPECTED_GT:
-        case INVALID_XML_ID:
-        case UNEXPECTED_EQUALSIGN:
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning, tagdesc );
-            break;
-
-        case XML_ID_SYNTAX:
-        case PROPRIETARY_ATTR_VALUE:
-        case ANCHOR_NOT_UNIQUE:
-        case ATTR_VALUE_NOT_LCASE:
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning, tagdesc, value );
-            break;
-
-
-        case MISSING_IMAGEMAP:
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning, tagdesc );
-            doc->badAccess |= BA_MISSING_IMAGE_MAP; /* @todo: why is this here instead of calling function? */
-            break;
-
-        case REPEATED_ATTRIBUTE:
-            message = TY_(tidyMessageCreateWithNode)(doc, node, code, TidyWarning, tagdesc, value, name );
-            break;
-            
-        case UNEXPECTED_END_OF_FILE_ATTR:
-            /* on end of file adjust reported position to end of input */
-            doc->lexer->lines   = doc->docIn->curline;
-            doc->lexer->columns = doc->docIn->curcol;
-            message = TY_(tidyMessageCreateWithLexer)(doc, code, TidyWarning, tagdesc );
-            break;
-    }
-
-    messageOut( message );
+    TY_(Report)(doc, NULL, node, code, av);
 }
 
-
-/* lexer is not defined when this is called */
 void TY_(ReportBadArgument)( TidyDocImpl* doc, ctmbstr option )
 {
     assert( option != NULL );
-
-    TidyMessageImpl *message = TY_(tidyMessageCreate)( doc, STRING_MISSING_MALFORMED, TidyConfig, option );
-    messageOut( message );
+    TY_(Report)(doc, NULL, NULL, STRING_MISSING_MALFORMED, option);
 }
 
 
