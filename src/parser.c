@@ -4121,6 +4121,14 @@ void TY_(ParseBody)(TidyDocImpl* doc, Node *body, GetTokenMode mode)
             }
         }
 
+        /* Issue #567 - <style> tags found in this <body> parsing
+           should be moved to the <head>, always... */
+        if (nodeIsSTYLE(node))
+        {
+            MoveToHead(doc, body, node);
+            continue;
+        }
+
         if (node->type == EndTag)
         {
             if ( nodeIsBR(node) )
