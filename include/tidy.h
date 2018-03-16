@@ -66,6 +66,10 @@
  * @date Additional updates: consult git log
  ******************************************************************************/
 
+#if defined(ANDROID) || defined(__ANDROID__)
+typedef unsigned long ulong;
+#endif
+
 #include "tidyplatform.h"
 #include "tidyenum.h"
 
